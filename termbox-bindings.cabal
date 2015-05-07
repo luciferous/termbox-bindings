@@ -16,6 +16,11 @@ build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
+executable example
+  build-depends:       base >=4.8 && <4.9
+                     , termbox-bindings
+  main-is:             Example.hs
+
 library
   exposed-modules:     Termbox
   -- other-modules:       

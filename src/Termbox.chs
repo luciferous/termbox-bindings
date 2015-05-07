@@ -3,6 +3,7 @@ module Termbox where
 
 import Data.Word
 import Foreign.C.Types
+import Foreign.Marshal.Alloc
 import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
@@ -26,7 +27,8 @@ instance Storable Cell where
 
 data Event = Key Word8 Word16 Word32
            | Resize Word32 Word32
-           | Mouse Word32 Word32
+           | Mouse Word32 Word32 Word16
+           deriving (Show, Eq)
 
 instance Storable Event where
   sizeOf _ = {#sizeof tb_event #}
@@ -40,6 +42,7 @@ instance Storable Event where
                          <*> (fromIntegral <$> {#get tb_event.h #} p)
       peek' p 3 = Mouse <$> (fromIntegral <$> {#get tb_event.x #} p)
                         <*> (fromIntegral <$> {#get tb_event.y #} p)
+                        <*> (fromIntegral <$> {#get tb_event.key #} p)
       peek' _ _ = error "Invalid event type"
   poke p (Key mod key ch) =
        ({#set tb_event.mod #} p $ fromIntegral mod)
@@ -48,9 +51,10 @@ instance Storable Event where
   poke p (Resize w h) =
        ({#set tb_event.w #} p $ fromIntegral w)
     *> ({#set tb_event.h #} p $ fromIntegral h)
-  poke p (Mouse x y) =
+  poke p (Mouse x y key) =
        ({#set tb_event.x #} p $ fromIntegral x)
     *> ({#set tb_event.y #} p $ fromIntegral y)
+    *> ({#set tb_event.key #} p $ fromIntegral key)
 
 {#pointer *tb_event as EventPtr -> Event #}
 
@@ -175,7 +179,7 @@ instance Storable Event where
 
 {#fun unsafe tb_set_cursor as ^ {`Int', `Int'} -> `()' #}
 
-{#fun unsafe tb_put_cell as ^ {`Int', `Int', `CellPtr'} -> `()' #}
+{#fun unsafe tb_put_cell as ^ {`Int', `Int', with* `Cell'} -> `()' #}
 
 {#fun unsafe tb_change_cell as ^ {`Int', `Int', `CUInt', `CUShort', `CUShort'} -> `()' #}
 
@@ -198,6 +202,6 @@ instance Storable Event where
 
 {#fun unsafe tb_select_output_mode as ^ {`Int'} -> `Int' #}
 
-{#fun unsafe tb_peek_event as ^ {`EventPtr', `Int'} -> `Int' #}
+{#fun unsafe tb_peek_event as ^ {alloca- `Event' peek*, `Int'} -> `Int' #}
 
-{#fun unsafe tb_poll_event as ^ {`EventPtr'} -> `Int' #}
+{#fun unsafe tb_poll_event as ^ {alloca- `Event' peek*} -> `Int' #}
