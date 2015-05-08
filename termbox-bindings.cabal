@@ -33,4 +33,3 @@ library
   hs-source-dirs:      src
   build-tools:         c2hs
   extra-libraries:     termbox
-  data-files: .termbox/dist/lib

@@ -1,7 +1,6 @@
 module Main where
 
 import Control.Monad (zipWithM_)
-import Data.Bits
 import Termbox
 import Termbox.Enums
 import Termbox.Modes
