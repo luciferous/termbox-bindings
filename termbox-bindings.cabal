@@ -5,7 +5,7 @@ name:                termbox-bindings
 version:             0.1.0.0
 synopsis:            Bindings to the termbox library
 -- description:         
-homepage:            github.com/luciferous/termbox-bindings
+homepage:            https://github.com/luciferous/termbox-bindings
 license:             BSD3
 license-file:        LICENSE
 author:              Neuman Vong
