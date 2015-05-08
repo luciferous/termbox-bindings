@@ -1,16 +1,42 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Termbox where
+module Termbox
+  ( Event(..)
+  , Cell(..)
+  , tbChangeCell
+  , tbClear
+  , tbHeight
+  , tbHideCursor
+  , tbInit
+  , tbInputMode
+  , tbOutputMode
+  , tbPeekEvent
+  , tbPollEvent
+  , tbPresent
+  , tbPutCell
+  , tbSelectInputMode
+  , tbSelectOutputMode
+  , tbSetClearAttributes
+  , tbSetCursor
+  , tbShutdown
+  , tbWidth
+  ) where
 
+import Control.Monad (void)
 import Data.Word
 import Foreign.C.Types
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
+import Termbox.Modes
+  ( InputMode, OutputMode
+  , toInputMode, toOutputMode
+  , fromInputMode, fromOutputMode
+  )
 
 import Prelude hiding (mod)
 
-#include "termbox.h"
+#include <termbox.h>
 
 data Cell = Cell Word32 Word16 Word16
 
@@ -27,9 +53,9 @@ instance Storable Cell where
 
 {#pointer *tb_cell as CellPtr -> Cell #}
 
-data Event = Key Word8 Word16 Word32
-           | Resize Word32 Word32
-           | Mouse Word32 Word32 Word16
+data Event = KeyEvent Word8 Word16 Word32
+           | ResizeEvent Word32 Word32
+           | MouseEvent Word32 Word32 Word16
            deriving (Show, Eq)
 
 instance Storable Event where
@@ -37,134 +63,42 @@ instance Storable Event where
   alignment _ = {#alignof tb_event #}
   peek p = {#get tb_event.type #} p >>= peek'
     where
-      peek' 1 = Key <$> (fromIntegral <$> {#get tb_event.mod #} p)
-                    <*> (fromIntegral <$> {#get tb_event.key #} p)
-                    <*> (fromIntegral <$> {#get tb_event.ch #} p)
-      peek' 2 = Resize <$> (fromIntegral <$> {#get tb_event.w #} p)
-                       <*> (fromIntegral <$> {#get tb_event.h #} p)
-      peek' 3 = Mouse <$> (fromIntegral <$> {#get tb_event.x #} p)
-                      <*> (fromIntegral <$> {#get tb_event.y #} p)
-                      <*> (fromIntegral <$> {#get tb_event.key #} p)
+      peek' {#const TB_EVENT_KEY #} =
+        KeyEvent <$> (fromIntegral <$> {#get tb_event.mod #} p)
+                 <*> (fromIntegral <$> {#get tb_event.key #} p)
+                 <*> (fromIntegral <$> {#get tb_event.ch #} p)
+      peek' {#const TB_EVENT_RESIZE #} =
+        ResizeEvent <$> (fromIntegral <$> {#get tb_event.w #} p)
+                    <*> (fromIntegral <$> {#get tb_event.h #} p)
+      peek' {#const TB_EVENT_MOUSE #} =
+        MouseEvent <$> (fromIntegral <$> {#get tb_event.x #} p)
+                   <*> (fromIntegral <$> {#get tb_event.y #} p)
+                   <*> (fromIntegral <$> {#get tb_event.key #} p)
       peek' _ = error "Invalid event type"
-  poke p (Key mod key ch) =
+  poke p (KeyEvent mod key ch) =
        ({#set tb_event.mod #} p $ fromIntegral mod)
     *> ({#set tb_event.key #} p $ fromIntegral key)
     *> ({#set tb_event.ch #} p $ fromIntegral ch)
-  poke p (Resize w h) =
+  poke p (ResizeEvent w h) =
        ({#set tb_event.w #} p $ fromIntegral w)
     *> ({#set tb_event.h #} p $ fromIntegral h)
-  poke p (Mouse x y key) =
+  poke p (MouseEvent x y key) =
        ({#set tb_event.x #} p $ fromIntegral x)
     *> ({#set tb_event.y #} p $ fromIntegral y)
     *> ({#set tb_event.key #} p $ fromIntegral key)
 
 {#pointer *tb_event as EventPtr -> Event #}
 
-{#enum define Key {
-  TB_KEY_F1               as F1,
-  TB_KEY_F2               as F2,
-  TB_KEY_F3               as F3,
-  TB_KEY_F4               as F4,
-  TB_KEY_F5               as F5,
-  TB_KEY_F6               as F6,
-  TB_KEY_F7               as F7,
-  TB_KEY_F8               as F8,
-  TB_KEY_F9               as F9,
-  TB_KEY_F10              as F10,
-  TB_KEY_F11              as F11,
-  TB_KEY_F12              as F12,
-  TB_KEY_INSERT           as Insert,
-  TB_KEY_DELETE           as Delete,
-  TB_KEY_HOME             as Home,
-  TB_KEY_END              as End,
-  TB_KEY_PGUP             as Pgup,
-  TB_KEY_PGDN             as Pgdn,
-  TB_KEY_ARROW_UP         as ArrowUp,
-  TB_KEY_ARROW_DOWN       as ArrowDown,
-  TB_KEY_ARROW_LEFT       as ArrowLeft,
-  TB_KEY_ARROW_RIGHT      as ArrowRight,
-  TB_KEY_MOUSE_LEFT       as MouseLeft,
-  TB_KEY_MOUSE_RIGHT      as MouseRight,
-  TB_KEY_MOUSE_MIDDLE     as MouseMiddle,
-  TB_KEY_MOUSE_RELEASE    as MouseRelease,
-  TB_KEY_MOUSE_WHEEL_UP   as MouseWheelUp,
-  TB_KEY_MOUSE_WHEEL_DOWN as MouseWheelDown,
-  TB_KEY_CTRL_TILDE       as CtrlTilde,
-  TB_KEY_CTRL_2           as Ctrl_2,
-  TB_KEY_CTRL_A           as CtrlA,
-  TB_KEY_CTRL_B           as CtrlB,
-  TB_KEY_CTRL_C           as CtrlC,
-  TB_KEY_CTRL_D           as CtrlD,
-  TB_KEY_CTRL_E           as CtrlE,
-  TB_KEY_CTRL_F           as CtrlF,
-  TB_KEY_CTRL_G           as CtrlG,
-  TB_KEY_BACKSPACE        as Backspace,
-  TB_KEY_CTRL_H           as CtrlH,
-  TB_KEY_TAB              as Tab,
-  TB_KEY_CTRL_I           as CtrlI,
-  TB_KEY_CTRL_J           as CtrlJ,
-  TB_KEY_CTRL_K           as CtrlK,
-  TB_KEY_CTRL_L           as CtrlL,
-  TB_KEY_ENTER            as Enter,
-  TB_KEY_CTRL_M           as CtrlM,
-  TB_KEY_CTRL_N           as CtrlN,
-  TB_KEY_CTRL_O           as CtrlO,
-  TB_KEY_CTRL_P           as CtrlP,
-  TB_KEY_CTRL_Q           as CtrlQ,
-  TB_KEY_CTRL_R           as CtrlR,
-  TB_KEY_CTRL_S           as CtrlS,
-  TB_KEY_CTRL_T           as CtrlT,
-  TB_KEY_CTRL_U           as CtrlU,
-  TB_KEY_CTRL_V           as CtrlV,
-  TB_KEY_CTRL_W           as CtrlW,
-  TB_KEY_CTRL_X           as CtrlX,
-  TB_KEY_CTRL_Y           as CtrlY,
-  TB_KEY_CTRL_Z           as CtrlZ,
-  TB_KEY_ESC              as Esc,
-  TB_KEY_CTRL_LSQ_BRACKET as CtrlLsqBracket,
-  TB_KEY_CTRL_3           as Ctrl_3,
-  TB_KEY_CTRL_4           as Ctrl_4,
-  TB_KEY_CTRL_BACKSLASH   as CtrlBackslash,
-  TB_KEY_CTRL_5           as Ctrl_5,
-  TB_KEY_CTRL_RSQ_BRACKET as CtrlRsqBracket,
-  TB_KEY_CTRL_6           as Ctrl_6,
-  TB_KEY_CTRL_7           as Ctrl_7,
-  TB_KEY_CTRL_SLASH       as CtrlSlash,
-  TB_KEY_CTRL_UNDERSCORE  as CtrlUnderscore,
-  TB_KEY_SPACE            as Space,
-  TB_KEY_BACKSPACE2       as Backspace2,
-  TB_KEY_CTRL_8           as Ctrl_8
-} #}
+{#fun unsafe tb_init as tbInit' {} -> `Int' #}
 
-{#enum define Mod {
-  TB_MOD_ALT as Alt
-} #}
+tbInit :: IO (Either String ())
+tbInit = fmap go tbInit'
+  where
+    go ({#const TB_EUNSUPPORTED_TERMINAL #}) = Left "tb_init: unsupported terminal"
+    go ({#const TB_EFAILED_TO_OPEN_TTY #})   = Left "tb_init: failed to open TTY"
+    go ({#const TB_EPIPE_TRAP_ERROR #})      = Left "tb_init: pipe trap failed"
+    go x = if x < 0 then Right () else Left "tb_init: unknown"
 
-{#enum define Color {
-  TB_DEFAULT as Default,
-  TB_BLACK   as Black,
-  TB_RED     as Red,
-  TB_GREEN   as Green,
-  TB_YELLOW  as Yellow,
-  TB_BLUE    as Blue,
-  TB_MAGENTA as Magenta,
-  TB_CYAN    as Cyan,
-  TB_WHITE   as White
-} #}
-
-{#enum define Attr {
-  TB_BOLD      as Bold,
-  TB_UNDERLINE as Underline,
-  TB_REVERSE   as Reverse
-} #}
-
-{#enum define Errors {
-  TB_EUNSUPPORTED_TERMINAL as UnsupportedTerminal,
-  TB_EFAILED_TO_OPEN_TTY   as FailedToOpenTty,
-  TB_EPIPE_TRAP_ERROR      as PipeTrapError
-} #}
-
-{#fun unsafe tb_init as ^ {} -> `Int' #}
 {#fun unsafe tb_shutdown as ^ {} -> `()' #}
 
 {#fun unsafe tb_width as ^ {} -> `Int' #}
@@ -175,9 +109,8 @@ instance Storable Event where
 
 {#fun unsafe tb_present as ^ {} -> `()' #}
 
-{#enum define Special {
-  TB_HIDE_CURSOR as HideCursor
-} #}
+tbHideCursor :: IO ()
+tbHideCursor = tbSetCursor ({#const TB_HIDE_CURSOR #}) ({#const TB_HIDE_CURSOR #})
 
 {#fun unsafe tb_set_cursor as ^ {`Int', `Int'} -> `()' #}
 
@@ -185,25 +118,28 @@ instance Storable Event where
 
 {#fun unsafe tb_change_cell as ^ {`Int', `Int', `CUInt', `CUShort', `CUShort'} -> `()' #}
 
-{#enum define InputMode {
-  TB_INPUT_CURRENT as InputCurrent,
-  TB_INPUT_ESC     as InputEsc,
-  TB_INPUT_ALT     as InputAlt,
-  TB_INPUT_MOUSE   as InputMouse
-} #}
+{#fun unsafe tb_select_input_mode as tbSelectInputMode' {`Int'} -> `Int' #}
 
-{#fun unsafe tb_select_input_mode as ^ {`Int'} -> `Int' #}
+{#fun unsafe tb_select_output_mode as tbSelectOutputMode' {`Int'} -> `Int' #}
 
-{#enum define OutputMode {
-  TB_OUTPUT_CURRENT   as OutputCurrent,
-  TB_OUTPUT_NORMAL    as OutputNormal,
-  TB_OUTPUT_256       as Output256,
-  TB_OUTPUT_216       as Output216,
-  TB_OUTPUT_GRAYSCALE as OutputGrayscale
-} #}
+tbInputMode :: IO InputMode
+tbInputMode = fmap toInputMode (tbSelectInputMode' {#const TB_INPUT_CURRENT #})
 
-{#fun unsafe tb_select_output_mode as ^ {`Int'} -> `Int' #}
+tbSelectInputMode :: InputMode -> IO ()
+tbSelectInputMode = void . tbSelectInputMode' . fromInputMode
+
+tbOutputMode :: IO OutputMode
+tbOutputMode = fmap toOutputMode (tbSelectOutputMode' {#const TB_OUTPUT_CURRENT #})
+
+tbSelectOutputMode :: OutputMode -> IO ()
+tbSelectOutputMode = void . tbSelectOutputMode' . fromOutputMode
 
 {#fun unsafe tb_peek_event as ^ {alloca- `Event' peek*, `Int'} -> `Int' #}
 
-{#fun unsafe tb_poll_event as ^ {alloca- `Event' peek*} -> `Int' #}
+{#fun unsafe tb_poll_event as tbPollEvent' {alloca- `Event' peek*} -> `Int' #}
+
+tbPollEvent :: IO (Either String Event)
+tbPollEvent = fmap go tbPollEvent'
+  where
+    go (-1, _) = Left "error: tb_poll_event returned -1"
+    go (_,  e) = Right e

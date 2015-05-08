@@ -3,6 +3,8 @@ module Main where
 import Control.Monad (zipWithM_)
 import Data.Bits
 import Termbox
+import Termbox.Enums
+import Termbox.Modes
 
 putc :: Int -> Int -> Color -> Color -> Char -> IO ()
 putc x y fg bg c =
@@ -16,12 +18,12 @@ puts x y fg bg s =
 
 main :: IO ()
 main = do
-    tbInit
-    tbSelectInputMode $ (fromEnum InputEsc) .|. (fromEnum InputMouse)
+    (Right _) <- tbInit
+    tbSelectInputMode inputMode { isEsc = True, isMouse = True }
     puts 1 1 White Black "Hello, world!"
     puts 1 3 White Black "Press 'q' to quit."
-    im <- tbSelectInputMode (fromEnum InputCurrent)
-    om <- tbSelectOutputMode (fromEnum OutputCurrent)
+    im <- tbInputMode
+    om <- tbOutputMode
     puts 1 5 Magenta Black $ "Current input mode: " ++ (show im)
     puts 1 6 Magenta Black $ "Current output mode: " ++ (show om)
     tbPresent
@@ -33,6 +35,6 @@ main = do
       puts 1 8 Magenta Black (show e)
       tbPresent
       case e of
-        (-1, _)            -> return ()
-        (_, (Key _ _ 113)) -> return ()
-        _                  -> loop
+        Left msg                 -> error msg
+        Right (KeyEvent _ _ 113) -> return ()
+        _                        -> loop
