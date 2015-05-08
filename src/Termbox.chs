@@ -8,7 +8,9 @@ import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
 
-#include <termbox.h>
+import Prelude hiding (mod)
+
+#include "termbox.h"
 
 data Cell = Cell Word32 Word16 Word16
 
@@ -33,17 +35,17 @@ data Event = Key Word8 Word16 Word32
 instance Storable Event where
   sizeOf _ = {#sizeof tb_event #}
   alignment _ = {#alignof tb_event #}
-  peek p = {#get tb_event.type #} p >>= peek' p
+  peek p = {#get tb_event.type #} p >>= peek'
     where
-      peek' p 1 = Key <$> (fromIntegral <$> {#get tb_event.mod #} p)
+      peek' 1 = Key <$> (fromIntegral <$> {#get tb_event.mod #} p)
+                    <*> (fromIntegral <$> {#get tb_event.key #} p)
+                    <*> (fromIntegral <$> {#get tb_event.ch #} p)
+      peek' 2 = Resize <$> (fromIntegral <$> {#get tb_event.w #} p)
+                       <*> (fromIntegral <$> {#get tb_event.h #} p)
+      peek' 3 = Mouse <$> (fromIntegral <$> {#get tb_event.x #} p)
+                      <*> (fromIntegral <$> {#get tb_event.y #} p)
                       <*> (fromIntegral <$> {#get tb_event.key #} p)
-                      <*> (fromIntegral <$> {#get tb_event.ch #} p)
-      peek' p 2 = Resize <$> (fromIntegral <$> {#get tb_event.w #} p)
-                         <*> (fromIntegral <$> {#get tb_event.h #} p)
-      peek' p 3 = Mouse <$> (fromIntegral <$> {#get tb_event.x #} p)
-                        <*> (fromIntegral <$> {#get tb_event.y #} p)
-                        <*> (fromIntegral <$> {#get tb_event.key #} p)
-      peek' _ _ = error "Invalid event type"
+      peek' _ = error "Invalid event type"
   poke p (Key mod key ch) =
        ({#set tb_event.mod #} p $ fromIntegral mod)
     *> ({#set tb_event.key #} p $ fromIntegral key)
