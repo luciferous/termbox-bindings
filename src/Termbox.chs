@@ -26,7 +26,6 @@ import Data.Int
 import Data.Word
 import Foreign.C.Types
 import Foreign.ForeignPtr
-import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import Termbox.Modes
@@ -39,43 +38,14 @@ import Prelude hiding (mod)
 
 #include <termbox.h>
 
-{#pointer *tb_cell as Cell foreign newtype #}
-
 data Event = KeyEvent Word8 Word16 Word32
            | ResizeEvent Int32 Int32
            | MouseEvent Int32 Int32 Word16
            deriving (Show, Eq)
 
-instance Storable Event where
-  sizeOf _ = {#sizeof tb_event #}
-  alignment _ = {#alignof tb_event #}
-  peek p = {#get tb_event.type #} p >>= peek'
-    where
-      peek' {#const TB_EVENT_KEY #} =
-        KeyEvent <$> (fromIntegral <$> {#get tb_event.mod #} p)
-                 <*> (fromIntegral <$> {#get tb_event.key #} p)
-                 <*> (fromIntegral <$> {#get tb_event.ch #} p)
-      peek' {#const TB_EVENT_RESIZE #} =
-        ResizeEvent <$> (fromIntegral <$> {#get tb_event.w #} p)
-                    <*> (fromIntegral <$> {#get tb_event.h #} p)
-      peek' {#const TB_EVENT_MOUSE #} =
-        MouseEvent <$> (fromIntegral <$> {#get tb_event.x #} p)
-                   <*> (fromIntegral <$> {#get tb_event.y #} p)
-                   <*> (fromIntegral <$> {#get tb_event.key #} p)
-      peek' _ = error "Invalid event type"
-  poke p (KeyEvent mod key ch) =
-       ({#set tb_event.mod #} p $ fromIntegral mod)
-    *> ({#set tb_event.key #} p $ fromIntegral key)
-    *> ({#set tb_event.ch #} p $ fromIntegral ch)
-  poke p (ResizeEvent w h) =
-       ({#set tb_event.w #} p $ fromIntegral w)
-    *> ({#set tb_event.h #} p $ fromIntegral h)
-  poke p (MouseEvent x y key) =
-       ({#set tb_event.x #} p $ fromIntegral x)
-    *> ({#set tb_event.y #} p $ fromIntegral y)
-    *> ({#set tb_event.key #} p $ fromIntegral key)
+{#pointer *tb_cell as Cell foreign newtype #}
 
-{#pointer *tb_event as EventPtr -> Event #}
+{#pointer *tb_event as RawEvent foreign newtype #}
 
 {#fun unsafe tb_init as tbInit' {} -> `Int' #}
 
@@ -122,12 +92,25 @@ tbOutputMode = fmap toOutputMode (tbSelectOutputMode' {#const TB_OUTPUT_CURRENT 
 tbSelectOutputMode :: OutputMode -> IO ()
 tbSelectOutputMode = void . tbSelectOutputMode' . fromOutputMode
 
-{#fun unsafe tb_peek_event as ^ {alloca- `Event' peek*, `Int'} -> `Int' #}
+{#fun tb_peek_event as ^ {+, `Int'} -> `RawEvent' #}
 
-{#fun unsafe tb_poll_event as tbPollEvent' {alloca- `Event' peek*} -> `Int' #}
+{#fun tb_poll_event as tbPollEvent' {+} -> `RawEvent' #}
 
 tbPollEvent :: IO (Either String Event)
-tbPollEvent = fmap go tbPollEvent'
+tbPollEvent = tbPollEvent' >>= \e -> withRawEvent e peekEvent
+
+peekEvent :: Ptr RawEvent -> IO (Either String Event)
+peekEvent p = {#get tb_event.type #} p >>= toEvent
   where
-    go (-1, _) = Left "error: tb_poll_event returned -1"
-    go (_,  e) = Right e
+    toEvent {#const TB_EVENT_KEY #} = fmap Right $
+      KeyEvent <$> (fromIntegral <$> {#get tb_event.mod #} p)
+               <*> (fromIntegral <$> {#get tb_event.key #} p)
+               <*> (fromIntegral <$> {#get tb_event.ch #} p)
+    toEvent {#const TB_EVENT_RESIZE #} = fmap Right $
+      ResizeEvent <$> (fromIntegral <$> {#get tb_event.w #} p)
+                  <*> (fromIntegral <$> {#get tb_event.h #} p)
+    toEvent {#const TB_EVENT_MOUSE #} = fmap Right $
+      MouseEvent <$> (fromIntegral <$> {#get tb_event.x #} p)
+                 <*> (fromIntegral <$> {#get tb_event.y #} p)
+                 <*> (fromIntegral <$> {#get tb_event.key #} p)
+    toEvent _ = return (Left "tbPollEvent: invalid event type")
