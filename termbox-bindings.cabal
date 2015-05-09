@@ -12,20 +12,20 @@ author:              Neuman Vong
 maintainer:          neuman.vong@gmail.com
 -- copyright:           
 category:            Text
-build-type:          Custom
+build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
 
 executable example
   default-language:    Haskell2010
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.6
                      , termbox-bindings
   main-is:             Example.hs
 
 library
   default-language:    Haskell2010
-  ghc-options:         -Wall -O2
+  ghc-options:         -Wall
   exposed-modules:     Termbox, Termbox.Enums, Termbox.Modes
   -- other-modules:
   -- other-extensions:    

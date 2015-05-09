@@ -17,7 +17,7 @@ puts x y fg bg s =
 
 main :: IO ()
 main = do
-    (Right _) <- tbInit
+    tbInit >>= either (\s -> tbShutdown >> putStrLn s) (\_ -> return ())
     tbSelectInputMode inputMode { isEsc = True, isMouse = True }
     puts 1 1 White Black "Hello, world!"
     puts 1 3 White Black "Press 'q' to quit."

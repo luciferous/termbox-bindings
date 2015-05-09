@@ -44,11 +44,12 @@ Build it.
     $ cd termbox
     $ ./waf configure --prefix=/usr
     $ ./waf
-    $ ./waf install --targets=termbox_static --destdir=$DEST
+    $ ./waf install --targets=termbox_static --destdir=.termbox/dist
 
 Now we're ready to build the bindings.
 
-    $ TB_INCLUDE_DIR=`pwd`/.termbox/src TB_LIB_DIR=`pwd`/.termbox/dist/lib cabal build
+    $ cabal configure --extra-include-dir=.termbox/src --extra-lib-dir=`pwd`/.termbox/dist/lib
+    $ cabal build
 
 And run the example.
 

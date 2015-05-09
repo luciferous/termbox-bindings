@@ -22,6 +22,7 @@ module Termbox
   ) where
 
 import Control.Monad (void)
+import Data.Int
 import Data.Word
 import Foreign.C.Types
 import Foreign.Marshal.Alloc
@@ -54,8 +55,8 @@ instance Storable Cell where
 {#pointer *tb_cell as CellPtr -> Cell #}
 
 data Event = KeyEvent Word8 Word16 Word32
-           | ResizeEvent Word32 Word32
-           | MouseEvent Word32 Word32 Word16
+           | ResizeEvent Int32 Int32
+           | MouseEvent Int32 Int32 Word16
            deriving (Show, Eq)
 
 instance Storable Event where
@@ -97,7 +98,7 @@ tbInit = fmap go tbInit'
     go ({#const TB_EUNSUPPORTED_TERMINAL #}) = Left "tb_init: unsupported terminal"
     go ({#const TB_EFAILED_TO_OPEN_TTY #})   = Left "tb_init: failed to open TTY"
     go ({#const TB_EPIPE_TRAP_ERROR #})      = Left "tb_init: pipe trap failed"
-    go x = if x < 0 then Right () else Left "tb_init: unknown"
+    go x = if x <= 0 then Right () else Left "tb_init: unknown"
 
 {#fun unsafe tb_shutdown as ^ {} -> `()' #}
 
