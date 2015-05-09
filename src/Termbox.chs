@@ -25,8 +25,8 @@ import Control.Monad (void)
 import Data.Int
 import Data.Word
 import Foreign.C.Types
+import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
-import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
 import Termbox.Modes
@@ -39,20 +39,7 @@ import Prelude hiding (mod)
 
 #include <termbox.h>
 
-data Cell = Cell Word32 Word16 Word16
-
-instance Storable Cell where
-  sizeOf _ = {#sizeof tb_cell #}
-  alignment _ = {#alignof tb_cell #}
-  peek p = Cell <$> (fromIntegral <$> {#get tb_cell.ch #} p)
-                <*> (fromIntegral <$> {#get tb_cell.fg #} p)
-                <*> (fromIntegral <$> {#get tb_cell.bg #} p)
-  poke p (Cell ch fg bg) =
-       ({#set tb_cell.ch #} p $ fromIntegral ch)
-    *> ({#set tb_cell.fg #} p $ fromIntegral fg)
-    *> ({#set tb_cell.bg #} p $ fromIntegral bg)
-
-{#pointer *tb_cell as CellPtr -> Cell #}
+{#pointer *tb_cell as Cell foreign newtype #}
 
 data Event = KeyEvent Word8 Word16 Word32
            | ResizeEvent Int32 Int32
@@ -115,7 +102,7 @@ tbHideCursor = tbSetCursor ({#const TB_HIDE_CURSOR #}) ({#const TB_HIDE_CURSOR #
 
 {#fun unsafe tb_set_cursor as ^ {`Int', `Int'} -> `()' #}
 
-{#fun unsafe tb_put_cell as ^ {`Int', `Int', with* `Cell'} -> `()' #}
+{#fun unsafe tb_put_cell as ^ {`Int', `Int', `Cell'} -> `()' #}
 
 {#fun unsafe tb_change_cell as ^ {`Int', `Int', `CUInt', `CUShort', `CUShort'} -> `()' #}
 
