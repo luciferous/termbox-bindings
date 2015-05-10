@@ -13,14 +13,16 @@ maintainer:          neuman.vong@gmail.com
 -- copyright:           
 category:            Text
 build-type:          Simple
--- extra-source-files:
+extra-source-files:  .termbox/src
 cabal-version:       >=1.10
 
 executable example
   default-language:    Haskell2010
+  ghc-options:         -Wall
   build-depends:       base >=4.6 && <4.9
                      , termbox-bindings
   main-is:             Example.hs
+  c-sources:           .termbox/src/termbox.c, .termbox/src/utf8.c
 
 library
   default-language:    Haskell2010
@@ -31,4 +33,6 @@ library
   build-depends:       base >=4.6 && <4.9
   hs-source-dirs:      src
   build-tools:         c2hs
-  extra-libraries:     termbox
+  include-dirs:        .termbox/src
+  c-sources:           .termbox/src/termbox.c, .termbox/src/utf8.c
+  includes:            termbox.h
