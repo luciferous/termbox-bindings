@@ -18,8 +18,10 @@ module Termbox.C
   , tb_poll_event
   , tb_select_input_mode
   , tb_select_output_mode
+  , tb_cell_buffer
   ) where
 
+import Control.Monad ((>=>))
 import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Ptr
@@ -33,6 +35,7 @@ import Foreign.Ptr
 {#fun unsafe tb_poll_event {+} -> `Event' #}
 {#fun unsafe tb_select_input_mode {`Int'} -> `Int' #}
 {#fun unsafe tb_select_output_mode {`Int'} -> `Int' #}
+{#fun unsafe tb_cell_buffer {} -> `Cell' #}
 
 {#fun unsafe tb_change_cell as changeCell {`Int', `Int', `CUInt', `CUShort', `CUShort'} -> `()' #}
 {#fun unsafe tb_clear as clear {} -> `()' #}
@@ -43,4 +46,3 @@ import Foreign.Ptr
 {#fun unsafe tb_set_cursor as setCursor {`Int', `Int'} -> `()' #}
 {#fun unsafe tb_shutdown as shutdown {} -> `()' #}
 {#fun unsafe tb_width as width {} -> `Int' #}
-
