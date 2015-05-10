@@ -1,27 +1,27 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Termbox
   ( C.Cell
-  , Event(..)
   , C.changeCell
   , C.clear
   , C.height
-  , getInputMode
-  , getOutputMode
-  , hideCursor
-  , init
-  , InputMode(..)
-  , inputMode
-  , OutputMode(..)
-  , peekEvent
-  , pollEvent
   , C.present
   , C.putCell
-  , setInputMode
-  , setOutputMode
   , C.setClearAttr
   , C.setCursor
   , C.shutdown
   , C.width
+  , Event(..)
+  , InputMode(..)
+  , OutputMode(..)
+  , getInputMode
+  , getOutputMode
+  , hideCursor
+  , init
+  , inputMode
+  , peekEvent
+  , pollEvent
+  , setInputMode
+  , setOutputMode
   ) where
 
 import Control.Arrow (left)
