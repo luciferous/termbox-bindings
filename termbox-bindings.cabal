@@ -3,8 +3,8 @@
 
 name:                termbox-bindings
 version:             0.1.0.3
-synopsis:            Bindings to the termbox library
--- description:         
+synopsis:            Bindings to the Termbox library
+description:         Bindings to the Termbox library.
 homepage:            https://github.com/luciferous/termbox-bindings
 license:             BSD3
 license-file:        LICENSE
@@ -16,7 +16,6 @@ build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
-
 executable example
   default-language:    Haskell2010
   build-depends:       base >=4.6 && <4.9
@@ -26,7 +25,7 @@ executable example
 library
   default-language:    Haskell2010
   ghc-options:         -Wall
-  exposed-modules:     Termbox, Termbox.Enums, Termbox.Modes
+  exposed-modules:     Termbox, Termbox.C, Termbox.Enums
   -- other-modules:
   -- other-extensions:    
   build-depends:       base >=4.6 && <4.9

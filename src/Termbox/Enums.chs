@@ -2,106 +2,121 @@ module Termbox.Enums where
 
 #include <termbox.h>
 
-{#enum define Attr {
-  TB_BOLD      as Bold,
-  TB_UNDERLINE as Underline,
-  TB_REVERSE   as Reverse
-} #}
+{#enum define Attrs {
+  TB_BOLD as TB_BOLD,
+  TB_UNDERLINE as TB_UNDERLINE,
+  TB_REVERSE as TB_REVERSE
+} deriving (Eq, Show) #}
 
 {#enum define Errors {
-  TB_EUNSUPPORTED_TERMINAL as UnsupportedTerminal,
-  TB_EFAILED_TO_OPEN_TTY   as FailedToOpenTty,
-  TB_EPIPE_TRAP_ERROR      as PipeTrapError
-} #}
+  TB_EUNSUPPORTED_TERMINAL as TB_EUNSUPPORTED_TERMINAL,
+  TB_EFAILED_TO_OPEN_TTY as TB_EFAILED_TO_OPEN_TTY,
+  TB_EPIPE_TRAP_ERROR as TB_EPIPE_TRAP_ERROR
+  } deriving (Eq, Show) #}
+
+{#enum define TB_HIDE_CURSOR { TB_HIDE_CURSOR as TB_HIDE_CURSOR } deriving (Eq, Show) #}
+
+{#enum define InputModes {
+  TB_INPUT_CURRENT as TB_INPUT_CURRENT,
+  TB_INPUT_ESC as TB_INPUT_ESC,
+  TB_INPUT_ALT as TB_INPUT_ALT,
+  TB_INPUT_MOUSE as TB_INPUT_MOUSE
+} deriving (Eq, Show) #}
+
+{#enum define OutputModes {
+  TB_OUTPUT_CURRENT as TB_OUTPUT_CURRENT,
+  TB_OUTPUT_NORMAL as TB_OUTPUT_NORMAL,
+  TB_OUTPUT_256 as TB_OUTPUT_256,
+  TB_OUTPUT_216 as TB_OUTPUT_216,
+  TB_OUTPUT_GRAYSCALE as TB_OUTPUT_GRAYSCALE
+} deriving (Eq, Show) #}
 
 {#enum define Color {
-  TB_DEFAULT as Default,
-  TB_BLACK   as Black,
-  TB_RED     as Red,
-  TB_GREEN   as Green,
-  TB_YELLOW  as Yellow,
-  TB_BLUE    as Blue,
+  TB_DEFAULT as TB_DEFAULT,
+  TB_BLACK as Black,
+  TB_RED as Red,
+  TB_GREEN as Green,
+  TB_YELLOW as Yellow,
+  TB_BLUE as Blue,
   TB_MAGENTA as Magenta,
-  TB_CYAN    as Cyan,
-  TB_WHITE   as White
-} #}
+  TB_CYAN as Cyan,
+  TB_WHITE as White
+} deriving (Eq, Show) #}
 
-{#enum define Mod {
-  TB_MOD_ALT as Alt
-} #}
+{#enum define Mod { TB_MOD_ALT as TB_MOD_ALT } deriving (Eq, Show) #}
 
 {#enum define Key {
-  TB_KEY_F1               as F1,
-  TB_KEY_F2               as F2,
-  TB_KEY_F3               as F3,
-  TB_KEY_F4               as F4,
-  TB_KEY_F5               as F5,
-  TB_KEY_F6               as F6,
-  TB_KEY_F7               as F7,
-  TB_KEY_F8               as F8,
-  TB_KEY_F9               as F9,
-  TB_KEY_F10              as F10,
-  TB_KEY_F11              as F11,
-  TB_KEY_F12              as F12,
-  TB_KEY_INSERT           as Insert,
-  TB_KEY_DELETE           as Delete,
-  TB_KEY_HOME             as Home,
-  TB_KEY_END              as End,
-  TB_KEY_PGUP             as Pgup,
-  TB_KEY_PGDN             as Pgdn,
-  TB_KEY_ARROW_UP         as ArrowUp,
-  TB_KEY_ARROW_DOWN       as ArrowDown,
-  TB_KEY_ARROW_LEFT       as ArrowLeft,
-  TB_KEY_ARROW_RIGHT      as ArrowRight,
-  TB_KEY_MOUSE_LEFT       as MouseLeft,
-  TB_KEY_MOUSE_RIGHT      as MouseRight,
-  TB_KEY_MOUSE_MIDDLE     as MouseMiddle,
-  TB_KEY_MOUSE_RELEASE    as MouseRelease,
-  TB_KEY_MOUSE_WHEEL_UP   as MouseWheelUp,
-  TB_KEY_MOUSE_WHEEL_DOWN as MouseWheelDown,
-  TB_KEY_CTRL_TILDE       as CtrlTilde,
-  TB_KEY_CTRL_2           as Ctrl_2,
-  TB_KEY_CTRL_A           as CtrlA,
-  TB_KEY_CTRL_B           as CtrlB,
-  TB_KEY_CTRL_C           as CtrlC,
-  TB_KEY_CTRL_D           as CtrlD,
-  TB_KEY_CTRL_E           as CtrlE,
-  TB_KEY_CTRL_F           as CtrlF,
-  TB_KEY_CTRL_G           as CtrlG,
-  TB_KEY_BACKSPACE        as Backspace,
-  TB_KEY_CTRL_H           as CtrlH,
-  TB_KEY_TAB              as Tab,
-  TB_KEY_CTRL_I           as CtrlI,
-  TB_KEY_CTRL_J           as CtrlJ,
-  TB_KEY_CTRL_K           as CtrlK,
-  TB_KEY_CTRL_L           as CtrlL,
-  TB_KEY_ENTER            as Enter,
-  TB_KEY_CTRL_M           as CtrlM,
-  TB_KEY_CTRL_N           as CtrlN,
-  TB_KEY_CTRL_O           as CtrlO,
-  TB_KEY_CTRL_P           as CtrlP,
-  TB_KEY_CTRL_Q           as CtrlQ,
-  TB_KEY_CTRL_R           as CtrlR,
-  TB_KEY_CTRL_S           as CtrlS,
-  TB_KEY_CTRL_T           as CtrlT,
-  TB_KEY_CTRL_U           as CtrlU,
-  TB_KEY_CTRL_V           as CtrlV,
-  TB_KEY_CTRL_W           as CtrlW,
-  TB_KEY_CTRL_X           as CtrlX,
-  TB_KEY_CTRL_Y           as CtrlY,
-  TB_KEY_CTRL_Z           as CtrlZ,
-  TB_KEY_ESC              as Esc,
-  TB_KEY_CTRL_LSQ_BRACKET as CtrlLsqBracket,
-  TB_KEY_CTRL_3           as Ctrl_3,
-  TB_KEY_CTRL_4           as Ctrl_4,
-  TB_KEY_CTRL_BACKSLASH   as CtrlBackslash,
-  TB_KEY_CTRL_5           as Ctrl_5,
-  TB_KEY_CTRL_RSQ_BRACKET as CtrlRsqBracket,
-  TB_KEY_CTRL_6           as Ctrl_6,
-  TB_KEY_CTRL_7           as Ctrl_7,
-  TB_KEY_CTRL_SLASH       as CtrlSlash,
-  TB_KEY_CTRL_UNDERSCORE  as CtrlUnderscore,
-  TB_KEY_SPACE            as Space,
-  TB_KEY_BACKSPACE2       as Backspace2,
-  TB_KEY_CTRL_8           as Ctrl_8
-} #}
+  TB_KEY_F1 as TB_KEY_F1,
+  TB_KEY_F2 as TB_KEY_F2,
+  TB_KEY_F3 as TB_KEY_F3,
+  TB_KEY_F4 as TB_KEY_F4,
+  TB_KEY_F5 as TB_KEY_F5,
+  TB_KEY_F6 as TB_KEY_F6,
+  TB_KEY_F7 as TB_KEY_F7,
+  TB_KEY_F8 as TB_KEY_F8,
+  TB_KEY_F9 as TB_KEY_F9,
+  TB_KEY_F10 as TB_KEY_F10,
+  TB_KEY_F11 as TB_KEY_F11,
+  TB_KEY_F12 as TB_KEY_F12,
+  TB_KEY_INSERT as TB_KEY_INSERT,
+  TB_KEY_DELETE as TB_KEY_DELETE,
+  TB_KEY_HOME as TB_KEY_HOME,
+  TB_KEY_END as TB_KEY_END,
+  TB_KEY_PGUP as TB_KEY_PGUP,
+  TB_KEY_PGDN as TB_KEY_PGDN,
+  TB_KEY_ARROW_UP as TB_KEY_ARROW_UP,
+  TB_KEY_ARROW_DOWN as TB_KEY_ARROW_DOWN,
+  TB_KEY_ARROW_LEFT as TB_KEY_ARROW_LEFT,
+  TB_KEY_ARROW_RIGHT as TB_KEY_ARROW_RIGHT,
+  TB_KEY_MOUSE_LEFT as TB_KEY_MOUSE_LEFT,
+  TB_KEY_MOUSE_RIGHT as TB_KEY_MOUSE_RIGHT,
+  TB_KEY_MOUSE_MIDDLE as TB_KEY_MOUSE_MIDDLE,
+  TB_KEY_MOUSE_RELEASE as TB_KEY_MOUSE_RELEASE,
+  TB_KEY_MOUSE_WHEEL_UP as TB_KEY_MOUSE_WHEEL_UP,
+  TB_KEY_MOUSE_WHEEL_DOWN as TB_KEY_MOUSE_WHEEL_DOWN,
+  TB_KEY_CTRL_TILDE as TB_KEY_CTRL_TILDE,
+  TB_KEY_CTRL_2 as TB_KEY_CTRL_2,
+  TB_KEY_CTRL_A as TB_KEY_CTRL_A,
+  TB_KEY_CTRL_B as TB_KEY_CTRL_B,
+  TB_KEY_CTRL_C as TB_KEY_CTRL_C,
+  TB_KEY_CTRL_D as TB_KEY_CTRL_D,
+  TB_KEY_CTRL_E as TB_KEY_CTRL_E,
+  TB_KEY_CTRL_F as TB_KEY_CTRL_F,
+  TB_KEY_CTRL_G as TB_KEY_CTRL_G,
+  TB_KEY_BACKSPACE as TB_KEY_BACKSPACE,
+  TB_KEY_CTRL_H as TB_KEY_CTRL_H,
+  TB_KEY_TAB as TB_KEY_TAB,
+  TB_KEY_CTRL_I as TB_KEY_CTRL_I,
+  TB_KEY_CTRL_J as TB_KEY_CTRL_J,
+  TB_KEY_CTRL_K as TB_KEY_CTRL_K,
+  TB_KEY_CTRL_L as TB_KEY_CTRL_L,
+  TB_KEY_ENTER as TB_KEY_ENTER,
+  TB_KEY_CTRL_M as TB_KEY_CTRL_M,
+  TB_KEY_CTRL_N as TB_KEY_CTRL_N,
+  TB_KEY_CTRL_O as TB_KEY_CTRL_O,
+  TB_KEY_CTRL_P as TB_KEY_CTRL_P,
+  TB_KEY_CTRL_Q as TB_KEY_CTRL_Q,
+  TB_KEY_CTRL_R as TB_KEY_CTRL_R,
+  TB_KEY_CTRL_S as TB_KEY_CTRL_S,
+  TB_KEY_CTRL_T as TB_KEY_CTRL_T,
+  TB_KEY_CTRL_U as TB_KEY_CTRL_U,
+  TB_KEY_CTRL_V as TB_KEY_CTRL_V,
+  TB_KEY_CTRL_W as TB_KEY_CTRL_W,
+  TB_KEY_CTRL_X as TB_KEY_CTRL_X,
+  TB_KEY_CTRL_Y as TB_KEY_CTRL_Y,
+  TB_KEY_CTRL_Z as TB_KEY_CTRL_Z,
+  TB_KEY_ESC as TB_KEY_ESC,
+  TB_KEY_CTRL_LSQ_BRACKET as TB_KEY_CTRL_LSQ_BRACKET,
+  TB_KEY_CTRL_3 as TB_KEY_CTRL_3,
+  TB_KEY_CTRL_4 as TB_KEY_CTRL_4,
+  TB_KEY_CTRL_BACKSLASH as TB_KEY_CTRL_BACKSLASH,
+  TB_KEY_CTRL_5 as TB_KEY_CTRL_5,
+  TB_KEY_CTRL_RSQ_BRACKET as TB_KEY_CTRL_RSQ_BRACKET,
+  TB_KEY_CTRL_6 as TB_KEY_CTRL_6,
+  TB_KEY_CTRL_7 as TB_KEY_CTRL_7,
+  TB_KEY_CTRL_SLASH as TB_KEY_CTRL_SLASH,
+  TB_KEY_CTRL_UNDERSCORE as TB_KEY_CTRL_UNDERSCORE,
+  TB_KEY_SPACE as TB_KEY_SPACE,
+  TB_KEY_BACKSPACE2 as TB_KEY_BACKSPACE2,
+  TB_KEY_CTRL_8 as TB_KEY_CTRL_8
+} deriving (Eq, Show) #}
